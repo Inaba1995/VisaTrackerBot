@@ -6,8 +6,6 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 CHECK_INTERVAL_MINUTES = int(os.getenv("CHECK_INTERVAL_MINUTES", "10"))
 
-# Italy visa centres in Russia — configurable URLs
-# These are example URLs; actual working ones need to be set by the user
 VISA_SOURCES = [
     {
         "name": "VFS Italy Moscow",
