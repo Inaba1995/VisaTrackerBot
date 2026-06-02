@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.client.default import DefaultBotProperties
@@ -34,9 +35,9 @@ async def cmd_start(message: types.Message):
         "Команды:\n"
         "/check — проверить прямо сейчас\n"
         "/sources — список общих источников\n"
-        "/addsource <url> <слова> — добавить свой источник\n"
+        "/addsource &lt;url&gt; &lt;слова&gt; — добавить свой источник\n"
         "/mysources — мои источники\n"
-        "/removesource <id> — удалить мой источник\n"
+        "/removesource &lt;id&gt; — удалить мой источник\n"
         "/subscribe — подписаться на уведомления\n"
         "/interval — интервал проверки\n"
         "/help — помощь"
@@ -89,7 +90,7 @@ async def cmd_addsource(message: types.Message):
     args = message.text.split(maxsplit=2)
     if len(args) < 3:
         await message.answer(
-            "❌ Использование: /addsource <url> <ключевые слова через запятую>\n\n"
+            "❌ Использование: /addsource &lt;url&gt; &lt;ключевые слова через запятую&gt;\n\n"
             "Пример: /addsource https://example.com свободно,доступно,slot"
         )
         return
@@ -127,7 +128,7 @@ async def cmd_mysources(message: types.Message):
 async def cmd_removesource(message: types.Message):
     args = message.text.split()
     if len(args) < 2 or not args[1].isdigit():
-        await message.answer("❌ Использование: /removesource <id>\nУзнать ID можно через /mysources")
+        await message.answer("❌ Использование: /removesource &lt;id&gt;\nУзнать ID можно через /mysources")
         return
     source_id = int(args[1])
     ok = await remove_source(source_id, message.from_user.id)
@@ -172,12 +173,25 @@ async def periodic_check():
                             logger.warning("Failed to notify %s: %s", uid, e)
 
 
+async def run_web_server():
+    port = int(os.getenv("PORT", "10000"))
+    from aiohttp import web
+    app = web.Application()
+    app.router.add_get("/", lambda r: web.Response(text="OK"))
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    logger.info("Health check server running on port %d", port)
+
+
 async def main():
     if not BOT_TOKEN or BOT_TOKEN == "your_telegram_bot_token":
         logger.error("BOT_TOKEN not set!")
         return
 
     await init_db()
+    asyncio.create_task(run_web_server())
     asyncio.create_task(periodic_check())
     logger.info("Starting bot...")
     await dp.start_polling(bot)
