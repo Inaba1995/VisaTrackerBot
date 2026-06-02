@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
 from config import VISA_SOURCES
+from database import get_all_user_sources
 
 logger = logging.getLogger(__name__)
 
@@ -47,11 +48,22 @@ async def check_source(source: dict) -> dict | None:
     return None
 
 
-async def check_all_sources() -> list[dict]:
+async def check_all_sources(user_sources: dict[int, list[dict]] | None = None) -> list[dict]:
     tasks = [check_source(s) for s in VISA_SOURCES]
+    if user_sources:
+        for uid, sources in user_sources.items():
+            for s in sources:
+                tasks.append(_check_for_user(s, uid))
     results = await asyncio.gather(*tasks, return_exceptions=True)
     hits = []
     for r in results:
         if isinstance(r, dict):
             hits.append(r)
     return hits
+
+
+async def _check_for_user(source: dict, user_id: int) -> dict | None:
+    result = await check_source(source)
+    if result:
+        result["user_id"] = user_id
+    return result
