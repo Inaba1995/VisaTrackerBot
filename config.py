@@ -19,4 +19,10 @@ VISA_SOURCES = [
         "check_type": "keyword",
         "keywords": ["slot", "available", "disponibile"],
     },
+    {
+        "name": "ItalyVMS",
+        "url": "https://italyvms.com/autoform/?t=thkqys2w6c-5197000-luurlp8v4vlfnpgo3ixoqr4zg3r1wu106bvmrbf9ga63k&lang=ru",
+        "check_type": "keyword",
+        "keywords": ["свободно", "доступно", "есть", "можно", "available", "slot"],
+    },
 ]
